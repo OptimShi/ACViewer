@@ -59,21 +59,24 @@ namespace ACViewer.Model
 
         public SetupInstance(R_PhysicsObj obj)
         {
-            var setupID = obj.PhysicsObj.PartArray.Setup._dat.Id;
+            if (obj.PhysicsObj.PartArray != null)
+            {
+                var setupID = obj.PhysicsObj.PartArray.Setup._dat.Id;
 
-            if (setupID == 0 && obj.PhysicsObj.PartArray.Parts.Count > 0)
-                setupID = obj.PhysicsObj.PartArray.Parts[0].GfxObj.ID;
+                if (setupID == 0 && obj.PhysicsObj.PartArray.Parts.Count > 0)
+                    setupID = obj.PhysicsObj.PartArray.Parts[0].GfxObj.ID;
 
-            if (setupID == 0)
-                setupID = obj.PhysicsObj.ID;
+                if (setupID == 0)
+                    setupID = obj.PhysicsObj.ID;
 
-            Setup = SetupCache.Get(setupID);
+                Setup = SetupCache.Get(setupID);
 
-            Position = obj.PhysicsObj.Position.Frame.Origin.ToXna();
-            Rotation = obj.PhysicsObj.Position.Frame.Orientation.ToXna();
-            Scale = obj.PhysicsObj.PartArray.Scale.ToXna();
+                Position = obj.PhysicsObj.Position.Frame.Origin.ToXna();
+                Rotation = obj.PhysicsObj.Position.Frame.Orientation.ToXna();
+                Scale = obj.PhysicsObj.PartArray.Scale.ToXna();
 
-            BuildWorldTransform();
+                BuildWorldTransform();
+            }
         }
 
         public void BuildWorldTransform()

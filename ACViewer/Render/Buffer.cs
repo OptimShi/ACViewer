@@ -116,7 +116,7 @@ namespace ACViewer.Render
         {
             var setupInstance = obj.Setup;
             var setup = setupInstance.Setup;
-
+            if (setup == null || setup.Parts == null) return;
             if (setup.Parts.Count != obj.PartArray.Parts.Count) return;
 
             for (var i = 0; i < setup.Parts.Count; i++)

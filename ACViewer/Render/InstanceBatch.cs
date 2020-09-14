@@ -72,16 +72,20 @@ namespace ACViewer.Render
                     var surfaceID = part._gfxObj.Surfaces[surfaceIdx];
 
                     var texture = TextureCache.Get(surfaceID);
-                    //Console.WriteLine($"Texture: {surfaceID:X8} Size: {texture.Width}x{texture.Height}");
-                    var textureFormat = new TextureFormat(texture.Format, texture.Width, texture.Height);
-
-                    DrawCalls.TryGetValue(textureFormat, out var batch);
-                    if (batch == null)
+                    if (texture != null)
                     {
-                        batch = new InstanceBatchDraw(textureFormat);
-                        DrawCalls.Add(textureFormat, batch);
+                        //Console.WriteLine($"Texture: {surfaceID:X8} Size: {texture.Width}x{texture.Height}");
+                        var textureFormat = new TextureFormat(texture.Format, texture.Width, texture.Height);
+
+                        DrawCalls.TryGetValue(textureFormat, out var batch);
+                        if (batch == null)
+                        {
+                            batch = new InstanceBatchDraw(textureFormat);
+                            DrawCalls.Add(textureFormat, batch);
+                        }
+                    
+                        batch.AddPolygon(vertices, polygon, surfaceID, transform);
                     }
-                    batch.AddPolygon(vertices, polygon, surfaceID, transform);
                 }
             }
         }
@@ -100,17 +104,25 @@ namespace ACViewer.Render
                     var surfaceIdx = polygon._polygon.PosSurface;
                     var surfaceID = envCell.EnvCell._envCell.Surfaces[surfaceIdx];
 
-                    var texture = TextureCache.Get(surfaceID);
-                    //Console.WriteLine($"Texture: {surfaceID:X8} Size: {texture.Width}x{texture.Height}");
-                    var textureFormat = new TextureFormat(texture.Format, texture.Width, texture.Height);
-
-                    DrawCalls.TryGetValue(textureFormat, out var batch);
-                    if (batch == null)
+                    if(surfaceID == 0x08000661)
                     {
-                        batch = new InstanceBatchDraw(textureFormat);
-                        DrawCalls.Add(textureFormat, batch);
+                        var test = "break";
                     }
-                    batch.AddPolygon(vertices, polygon, surfaceID, transform);
+
+                    var texture = TextureCache.Get(surfaceID);
+                    if (texture != null)
+                    {
+                        //Console.WriteLine($"Texture: {surfaceID:X8} Size: {texture.Width}x{texture.Height}");
+                        var textureFormat = new TextureFormat(texture.Format, texture.Width, texture.Height);
+
+                        DrawCalls.TryGetValue(textureFormat, out var batch);
+                        if (batch == null)
+                        {
+                            batch = new InstanceBatchDraw(textureFormat);
+                            DrawCalls.Add(textureFormat, batch);
+                        }
+                        batch.AddPolygon(vertices, polygon, surfaceID, transform);
+                    }
                 }
             }
         }

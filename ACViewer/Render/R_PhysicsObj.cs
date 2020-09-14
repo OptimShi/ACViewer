@@ -19,7 +19,8 @@ namespace ACViewer.Render
         {
             PhysicsObj = obj;
             PartArray = new R_PartArray(obj.PartArray);
-            Setup = new SetupInstance(this);
+            if(PartArray != null)
+                Setup = new SetupInstance(this);
         }
 
         public void Draw(Matrix world)

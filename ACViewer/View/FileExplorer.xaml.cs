@@ -171,11 +171,17 @@ namespace ACViewer.View
             if (fileID == 0) return;
 
             Selected_FileID = fileID;
-
-            if (PortalMode)
-                ReadPortalFile(fileID);
-            else
-                ReadCellFile(fileID);
+            try
+            {
+                if (PortalMode)
+                    ReadPortalFile(fileID);
+                else
+                    ReadCellFile(fileID);
+            }
+            catch(Exception ex)
+            {
+                MainWindow.Status.WriteLine($"Error loading {fileID:X8} -- {ex.Message}");
+            }
         }
 
         public void ReadCellFile(uint fileID)

@@ -108,7 +108,7 @@ namespace ACViewer
                     int offset = (int)(range.Offset);
                     int numColors = (int)(range.NumColors);
                     // add the appropriate colors to our custom palette
-                    for (int i = 0; i < numColors; i++)
+                    for (int i = 0; i < System.Math.Min(numColors, palette.Colors.Count); i++)
                         customPaletteColors.Add(i + offset, palette.Colors[i + offset]);
                 }
             }

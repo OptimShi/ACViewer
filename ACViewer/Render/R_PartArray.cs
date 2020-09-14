@@ -27,6 +27,7 @@ namespace ACViewer.Render
 
         public R_PartArray(PartArray partArray)
         {
+            if (partArray == null) return;
             PartArray = partArray;
             Parts = new List<R_PhysicsPart>();
 

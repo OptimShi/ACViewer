@@ -421,27 +421,29 @@ namespace ACViewer.Render
                         palette.Colors[entry.Key] = entry.Value;
 
             var output = new byte[texture.Width * texture.Height * 4];
+            if (palette.Colors.Count > 0)
+            {
+                for (int i = 0; i < texture.Height; i++)
+                    for (int j = 0; j < texture.Width; j++)
+                    {
+                        int idx = (i * texture.Width) + j;
+                        var color = colors[idx];
+                        var paletteColor = palette.Colors[color];
 
-            for (int i = 0; i < texture.Height; i++)
-                for (int j = 0; j < texture.Width; j++)
-                {
-                    int idx = (i * texture.Width) + j;
-                    var color = colors[idx];
-                    var paletteColor = palette.Colors[color];
+                        byte a = Convert.ToByte((paletteColor & 0xFF000000) >> 24);
+                        byte r = Convert.ToByte((paletteColor & 0xFF0000) >> 16);
+                        byte g = Convert.ToByte((paletteColor & 0xFF00) >> 8);
+                        byte b = Convert.ToByte(paletteColor & 0xFF);
 
-                    byte a = Convert.ToByte((paletteColor & 0xFF000000) >> 24);
-                    byte r = Convert.ToByte((paletteColor & 0xFF0000) >> 16);
-                    byte g = Convert.ToByte((paletteColor & 0xFF00) >> 8);
-                    byte b = Convert.ToByte(paletteColor & 0xFF);
+                        if (isClipMap && color < 8)
+                            r = g = b = a = 0;
 
-                    if (isClipMap && color < 8)
-                        r = g = b = a = 0;
-
-                    output[idx * 4] = r;
-                    output[idx * 4 + 1] = g;
-                    output[idx * 4 + 2] = b;
-                    output[idx * 4 + 3] = a;
-                }
+                        output[idx * 4] = r;
+                        output[idx * 4 + 1] = g;
+                        output[idx * 4 + 2] = b;
+                        output[idx * 4 + 3] = a;
+                    }
+            }
 
             return output;
         }
@@ -538,6 +540,7 @@ namespace ACViewer.Render
                 }
 
                 uint textureId = surface.OrigTextureId;
+                if (textureId == 0) return null;
                 if (textureMapChanges != null)
                 {
                     var tmChange = textureMapChanges.Where(t => t.OldTexture == surface.OrigTextureId).FirstOrDefault();
@@ -547,6 +550,8 @@ namespace ACViewer.Render
                 var surfaceTexture = DatManager.PortalDat.ReadFromDat<SurfaceTexture>(textureId);
 
                 return GetTexture(surface, surfaceTexture.Textures[0], customPaletteColors, useCache);
+                
+
             }
             return null;
         }

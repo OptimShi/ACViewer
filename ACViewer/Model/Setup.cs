@@ -21,6 +21,7 @@ namespace ACViewer.Model
 
         public Setup(uint setupID)
         {
+            if (setupID == 0) return;
             // make simple setup if gfxobj
             if (setupID >> 24 == 0x1)
             {
