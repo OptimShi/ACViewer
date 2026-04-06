@@ -1,16 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-
+﻿using ACE.DatLoader;
 using ACE.DatLoader.Entity;
 using ACE.Server.Physics;
 using ACViewer.Config;
-using ACViewer.Extensions;
 using ACViewer.Enum;
+using ACViewer.Extensions;
 using ACViewer.Model;
+using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace ACViewer.Render
 {
@@ -60,8 +59,22 @@ namespace ACViewer.Render
         {
             TextureAtlasChains = new Dictionary<TextureFormat, TextureAtlasChain>();
 
-            var overlayFormat = new TextureFormat(SurfaceFormat.Color, 512, 512, false);
-            var alphaFormat = new TextureFormat(SurfaceFormat.Alpha8, 512, 512, false);
+            int DatTextureSize = 0;
+            int AlphaTextureSize = 0;
+            switch (DatManager.DatVersion)
+            {
+                case DatVersionType.DM:
+                    DatTextureSize = 128;
+                    AlphaTextureSize = 64;
+                    break;
+                case DatVersionType.TOD:
+                    DatTextureSize = 512;
+                    AlphaTextureSize = 512;
+                    break;                    
+            }
+
+            var overlayFormat = new TextureFormat(SurfaceFormat.Color, DatTextureSize, DatTextureSize, false);
+            var alphaFormat = new TextureFormat(SurfaceFormat.Alpha8, AlphaTextureSize, AlphaTextureSize, false);
 
             var overlayAtlasChain = new TextureAtlasChain(overlayFormat);
             var alphaAtlasChain = new TextureAtlasChain(alphaFormat);

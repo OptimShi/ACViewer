@@ -23,7 +23,9 @@ namespace ACE.DatLoader.FileTypes
             Id = reader.ReadUInt32();
 
             Spells.UnpackPackedHashTable(reader);
-            SpellSet.UnpackPackedHashTable(reader);
+
+            if(DatManager.DatVersion == DatVersionType.TOD)
+                SpellSet.UnpackPackedHashTable(reader);
         }
 
         /// <summary>

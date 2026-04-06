@@ -1,6 +1,7 @@
-using System.IO;
-
 using ACE.DatLoader.Entity;
+using log4net.Util;
+using System.Collections.Generic;
+using System.IO;
 
 namespace ACE.DatLoader.FileTypes
 {
@@ -10,7 +11,8 @@ namespace ACE.DatLoader.FileTypes
     [DatFileType(DatFileType.Region)]
     public class RegionDesc : FileType
     {
-        internal const uint FILE_ID = 0x13000000;
+        internal const uint FILE_ID = 0x13000000; // Post ToD, this is the only Region. Pre, it's got the PalShift render data
+        internal const uint HW_FILE_ID = 0x130F0000; // Equivalent to the ToD Region
 
         public uint RegionNumber { get; private set; }
         public uint Version { get; private set; }
@@ -33,7 +35,7 @@ namespace ACE.DatLoader.FileTypes
 
             RegionNumber    = reader.ReadUInt32();
             Version         = reader.ReadUInt32();
-            RegionName      = reader.ReadPString(); // "Dereth"
+            RegionName      = reader.ReadPString(); // "Dereth", "Lands of Dereth" in ACDM
             reader.AlignBoundary();
 
             LandDefs.Unpack(reader);
@@ -54,6 +56,39 @@ namespace ACE.DatLoader.FileTypes
 
             if ((PartsMask & 0x0200) != 0)
                 RegionMisc.Unpack(reader);
+        }
+
+        public static float GetLandHeight(int idx)
+        {
+            if(DatManager.PortalDat.RegionDesc.LandDefs == null)
+                return (idx * 2); // No landheight table, so this is just a guess
+
+            var lh = DatManager.PortalDat.RegionDesc.LandDefs.LandHeightTable;
+            return lh[idx];
+        }
+
+        public List<uint> GetScenes(int terrainType, int sceneType)
+        {
+            //return new List<uint>();
+            if (terrainType < 0 || sceneType < 0)
+                return new List<uint>();
+
+            if (terrainType < DatManager.PortalDat.RegionDesc.TerrainInfo.TerrainTypes.Count)
+            {
+                var terrain = DatManager.PortalDat.RegionDesc.TerrainInfo.TerrainTypes[terrainType];
+                if (sceneType < terrain.SceneTypes.Count)
+                {
+                    var sceneInfo = (int)terrain.SceneTypes[sceneType];
+                    if (sceneInfo < DatManager.PortalDat.RegionDesc.SceneInfo.SceneTypes.Count)
+                    {
+                        var scenes = DatManager.PortalDat.RegionDesc.SceneInfo.SceneTypes[sceneInfo].Scenes;
+                        // Note that the number of Scenes can be 0, even if it exists. Some scenes are just set up to play ambient sounds.
+                        return scenes;
+                    }
+                }
+            }
+
+            return new List<uint>();
         }
     }
 }

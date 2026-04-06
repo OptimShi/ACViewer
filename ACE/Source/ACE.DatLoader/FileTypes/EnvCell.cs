@@ -24,10 +24,10 @@ namespace ACE.DatLoader.FileTypes
         public List<uint> Surfaces { get; } = new List<uint>();
         // the 0x0D000000 model of the pre-fab dungeon block
         public uint EnvironmentId { get; private set; }
-        public ushort CellStructure { get; private set; }
+        public uint CellStructure { get; private set; }
         public Frame Position { get; } = new Frame();
         public List<CellPortal> CellPortals { get; } = new List<CellPortal>();
-        public List<ushort> VisibleCells { get; } = new List<ushort>();
+        public List<uint> VisibleCells { get; } = new List<uint>();
         public List<Stab> StaticObjects { get; } = new List<Stab>();
         public uint RestrictionObj { get; private set; }
 
@@ -35,36 +35,77 @@ namespace ACE.DatLoader.FileTypes
 
         public override void Unpack(BinaryReader reader)
         {
+            if (DatManager.DatVersion == DatVersionType.DM)
+            {
+                UnpackDM(reader);
+            }
+            else
+            {
+                Id = reader.ReadUInt32();
+
+                Flags = (EnvCellFlags)reader.ReadUInt32();
+                reader.BaseStream.Position += 4; // Skip ahead 4 bytes, because this is the CellId. Again. Twice.
+
+                byte numSurfaces = reader.ReadByte();
+                byte numPortals = reader.ReadByte();    // Note that "portal" in this context does not refer to the swirly pink/purple thing, its basically connecting cells
+                ushort numStabs = reader.ReadUInt16();  // I believe this is what cells can be seen from this one. So the engine knows what else it needs to load/draw.
+
+                // Read what surfaces are used in this cell
+                for (uint i = 0; i < numSurfaces; i++)
+                    Surfaces.Add(0x08000000u | reader.ReadUInt16()); // these are stored in the dat as short values, so we'll make them a full dword
+
+                EnvironmentId = (0x0D000000u | reader.ReadUInt16());
+
+                CellStructure = reader.ReadUInt16();
+
+                Position.Unpack(reader);
+
+                CellPortals.Unpack(reader, numPortals);
+
+                for (uint i = 0; i < numStabs; i++)
+                    VisibleCells.Add(reader.ReadUInt16());
+
+                if ((Flags & EnvCellFlags.HasStaticObjs) != 0)
+                    StaticObjects.Unpack(reader);
+
+                if ((Flags & EnvCellFlags.HasRestrictionObj) != 0)
+                    RestrictionObj = reader.ReadUInt32();
+            }
+        }
+        public void UnpackDM(BinaryReader reader)
+        {
             Id = reader.ReadUInt32();
 
-            Flags = (EnvCellFlags)reader.ReadUInt32();
+            Flags = (EnvCellFlags)0;
 
-            reader.BaseStream.Position += 4; // Skip ahead 4 bytes, because this is the CellId. Again. Twice.
+            uint numSurfaces = reader.ReadUInt32();
+            uint numPortals = reader.ReadUInt32();    // Note that "portal" in this context does not refer to the swirly pink/purple thing, its basically connecting cells
+            uint numStabs = reader.ReadUInt32();  // I believe this is what cells can be seen from this one. So the engine knows what else it needs to load/draw.
+            uint numObjects = reader.ReadUInt32();
 
-            byte numSurfaces    = reader.ReadByte();
-            byte numPortals     = reader.ReadByte();    // Note that "portal" in this context does not refer to the swirly pink/purple thing, its basically connecting cells
-            ushort numStabs     = reader.ReadUInt16();  // I believe this is what cells can be seen from this one. So the engine knows what else it needs to load/draw.
+            /*Unknown = */ reader.ReadUInt32();
 
             // Read what surfaces are used in this cell
             for (uint i = 0; i < numSurfaces; i++)
-                Surfaces.Add(0x08000000u | reader.ReadUInt16()); // these are stored in the dat as short values, so we'll make them a full dword
+                Surfaces.Add(reader.ReadUInt32()); // these are stored in the dat as full values, whereas retail stored as shorts
 
-            EnvironmentId = (0x0D000000u | reader.ReadUInt16());
+            EnvironmentId = (reader.ReadUInt32());
 
-            CellStructure = reader.ReadUInt16();
+            CellStructure = reader.ReadUInt32();
 
             Position.Unpack(reader);
 
             CellPortals.Unpack(reader, numPortals);
 
             for (uint i = 0; i < numStabs; i++)
-                VisibleCells.Add(reader.ReadUInt16());
+                VisibleCells.Add(reader.ReadUInt32());
 
-            if ((Flags & EnvCellFlags.HasStaticObjs) != 0)
-                StaticObjects.Unpack(reader);
-
-            if ((Flags & EnvCellFlags.HasRestrictionObj) != 0)
-                RestrictionObj = reader.ReadUInt32();
+            for (uint i = 0; i < numObjects; i++)
+            {
+                Stab stab = new Stab();
+                stab.Unpack(reader); ;
+                StaticObjects.Add(stab);
+            }
         }
     }
 }

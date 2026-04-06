@@ -8,9 +8,9 @@ namespace ACE.Server.Physics.Common
         public PortalFlags Flags;
         public bool ExactMatch;
         public bool PortalSide;
-        public ushort OtherCellId;
-        public ushort OtherPortalId;
-        public List<ushort> StabList;
+        public uint OtherCellId;
+        public uint OtherPortalId;
+        public List<uint> StabList;
 
         public BldPortal() { }
 
@@ -31,7 +31,7 @@ namespace ACE.Server.Physics.Common
             return (EnvCell)LScape.get_landcell(blockCellID);
         }
 
-        public void add_to_stablist(ref List<ushort> stabList, ref uint maxSize, ref uint stabNum)
+        public void add_to_stablist(ref List<uint> stabList, ref uint maxSize, ref uint stabNum)
         {
             // is maxSize needed with list?
             for (var i = 0; i < StabList.Count; i++)
@@ -48,7 +48,7 @@ namespace ACE.Server.Physics.Common
                     if (stabNum >= maxSize)
                     {
                         var old = stabList;
-                        stabList = new List<ushort>();
+                        stabList = new List<uint>();
                         maxSize += 10;
                         foreach (var stab in StabList)
                             stabList.Add(stab);

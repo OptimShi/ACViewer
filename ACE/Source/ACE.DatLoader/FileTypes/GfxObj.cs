@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
@@ -32,16 +33,34 @@ namespace ACE.DatLoader.FileTypes
         {
             Id = reader.ReadUInt32();
 
+            Console.WriteLine($"Unpacking GfxObj.{Id:X8}");
+
             Flags = (GfxObjFlags)reader.ReadUInt32();
 
-            Surfaces.UnpackSmartArray(reader);
+            if (DatManager.DatVersion == DatVersionType.DM)
+                Surfaces.Unpack(reader);
+            else
+                Surfaces.UnpackSmartArray(reader);
 
             VertexArray.Unpack(reader);
 
             // Has Physics 
             if ((Flags & GfxObjFlags.HasPhysics) != 0)
             {
-                PhysicsPolygons.UnpackSmartArray(reader);
+                if (DatManager.DatVersion == DatVersionType.DM)
+                {
+                    var numPolys = reader.ReadUInt32();
+                    for (var i = 0; i < numPolys; i++)
+                    {
+                        var key = reader.ReadUInt16();
+                        var poly = new Polygon();
+                        poly.Unpack(reader);
+                        PhysicsPolygons.Add(key, poly);
+                        reader.AlignBoundary();
+                    }
+                }
+                else
+                    PhysicsPolygons.UnpackSmartArray(reader);
 
                 PhysicsBSP.Unpack(reader, BSPType.Physics);
             }
@@ -51,7 +70,20 @@ namespace ACE.DatLoader.FileTypes
             // Has Drawing 
             if ((Flags & GfxObjFlags.HasDrawing) != 0)
             {
-                Polygons.UnpackSmartArray(reader);
+                if (DatManager.DatVersion == DatVersionType.DM)
+                {
+                    var numPolys = reader.ReadUInt32();
+                    for(var i = 0; i<numPolys; i++)
+                    {
+                        var key = reader.ReadUInt16();
+                        var poly = new Polygon();
+                        poly.Unpack(reader);
+                        Polygons.Add(key, poly);
+                        reader.AlignBoundary();
+                    }
+                }
+                else
+                    Polygons.UnpackSmartArray(reader);
 
                 DrawingBSP.Unpack(reader, BSPType.Drawing);
             }

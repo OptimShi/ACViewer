@@ -71,9 +71,19 @@ namespace ACViewer.Render
 
             MainWindow.Instance.Status.WriteLine($"Loading texture {textureID:X8}");
 
-            var texture = DatManager.PortalDat.ReadFromDat<ACE.DatLoader.FileTypes.Texture>(textureID);
-            if (texture.SourceData == null && DatManager.HighResDat != null)
-                texture = DatManager.HighResDat.ReadFromDat<ACE.DatLoader.FileTypes.Texture>(textureID);
+            ACE.DatLoader.FileTypes.Texture texture;
+            if (DatManager.DatVersion == DatVersionType.DM && textureID >> 24 == 0x05)
+            {
+                var surfaceTexture = DatManager.PortalDat.ReadFromDat<ACE.DatLoader.FileTypes.SurfaceTexture>(textureID);
+                texture = surfaceTexture.ConvertToTexture();
+            }
+            else
+            {
+                texture = DatManager.PortalDat.ReadFromDat<ACE.DatLoader.FileTypes.Texture>(textureID);
+                if (texture.SourceData == null && DatManager.HighResDat != null)
+                    texture = DatManager.HighResDat.ReadFromDat<ACE.DatLoader.FileTypes.Texture>(textureID);
+
+            }
 
             if (texture.SourceData == null)
             {
@@ -101,8 +111,8 @@ namespace ACViewer.Render
                     //if (!isClipMap)
                     surfaceFormat = SurfaceFormat.Dxt5;
                     break;
+                case SurfacePixelFormat.ALPHA_ONLY:
                 case SurfacePixelFormat.PFID_CUSTOM_LSCAPE_ALPHA:
-                case SurfacePixelFormat.PFID_A8:
                 case SurfacePixelFormat.PFID_P8:    // indexed color
                     surfaceFormat = SurfaceFormat.Alpha8;
                     break;
@@ -118,6 +128,10 @@ namespace ACViewer.Render
             {
                 switch (texture.Format)
                 {
+                    case SurfacePixelFormat.RGB888:
+                        data = AddAlpha(data);
+                        ConvertToBGRA(data);
+                        break;
                     case SurfacePixelFormat.PFID_R8G8B8:
                     case SurfacePixelFormat.PFID_CUSTOM_LSCAPE_R8G8B8:
                         data = AddAlpha(data);
@@ -125,12 +139,13 @@ namespace ACViewer.Render
                     case SurfacePixelFormat.PFID_INDEX16:
                         data = IndexToColor(texture, isClipMap, paletteChanges);
                         break;
+                    case SurfacePixelFormat.COLOR_SEP:
+                    case SurfacePixelFormat.RGB565:
                     case SurfacePixelFormat.PFID_CUSTOM_RAW_JPEG:
                     case SurfacePixelFormat.PFID_R5G6B5:
                     case SurfacePixelFormat.PFID_A4R4G4B4:
-                    //case SurfacePixelFormat.PFID_DXT5:
                         var bitmap = texture.GetBitmap();
-                        if (texture.Format == SurfacePixelFormat.PFID_CUSTOM_RAW_JPEG)
+                        if (texture.Format == SurfacePixelFormat.PFID_CUSTOM_RAW_JPEG || texture.Format == SurfacePixelFormat.COLOR_SEP)
                             SwapRedAndBlueChannels(bitmap);
                         var _tex = GetTexture2DFromBitmap(GameView.Instance.GraphicsDevice, bitmap);
                         //if (isClipMap)
@@ -141,6 +156,9 @@ namespace ACViewer.Render
                         ConvertToBGRA(data);
                         if (surface != null && surface.Translucency > 0)
                             PremultiplyAlpha(data, 1.0f - surface.Translucency);
+                        break;
+                    default:
+                        var stop = true;
                         break;
                 }
             }
@@ -293,6 +311,10 @@ namespace ACViewer.Render
             return rgba;
         }
 
+        /// <summary>
+        /// Swaps RGBA to BGRA colors
+        /// </summary>
+        /// <param name="rgba"></param>
         private static void ConvertToBGRA(byte[] rgba)
         {
             for (var i = 0; i < rgba.Length; i += 4)
@@ -397,14 +419,18 @@ namespace ACViewer.Render
                 return swatch;
             }
 
-            var surfaceTexture = DatManager.PortalDat.ReadFromDat<SurfaceTexture>(surfaceTextureID);
-
-            return GetTexture(surfaceTexture.Textures[0], surface, paletteChanges);
+            if (DatManager.DatVersion == DatVersionType.DM)
+                return GetTexture(surfaceTextureID, surface, paletteChanges);
+            else
+            {
+                var surfaceTexture = DatManager.PortalDat.ReadFromDat<SurfaceTexture>(surfaceTextureID);
+                return GetTexture(surfaceTexture.Textures[0], surface, paletteChanges);
+            }
         }
         
         // 0x08 - Surface - contains a 0x05 SurfaceTexture, along with additional type info (clipmask)
-        // 0x05 - SurfaceTexture - contains a list of 0x06 textures
-        // 0x06 - Texture - image format and data
+        // 0x05 - SurfaceTexture - contains a list of 0x06 textures, or pre-TOD, textures
+        // 0x06 - Texture - image format and data, or pre-TOD contains UI textures
 
         public static Texture2D Get(uint fileID, Dictionary<uint, uint> textureChanges = null, PaletteChanges paletteChanges = null, bool useCache = true)
         {
@@ -455,7 +481,10 @@ namespace ACViewer.Render
                 // surface texture
                 var surfaceTexture = DatManager.PortalDat.ReadFromDat<SurfaceTexture>(fileID);
 
-                return GetTexture(surfaceTexture.Textures[0], null, paletteChanges, useCache);
+                if(DatManager.DatVersion == DatVersionType.TOD)
+                    return GetTexture(surfaceTexture.Textures[0], null, paletteChanges, useCache);
+                else
+                    return GetTexture(fileID, null, paletteChanges, useCache);
             }
             else if (fileID >> 24 == 0x06)
             {
@@ -492,7 +521,10 @@ namespace ACViewer.Render
 
                 var surfaceTexture = DatManager.PortalDat.ReadFromDat<SurfaceTexture>(textureId);
 
-                return GetTexture(surfaceTexture.Textures[0], surface, paletteChanges, useCache);
+                if(DatManager.DatVersion == DatVersionType.TOD)
+                    return GetTexture(surfaceTexture.Textures[0], surface, paletteChanges, useCache);
+                else
+                    return GetTexture(textureId, surface, paletteChanges, useCache);
             }
             return null;
         }

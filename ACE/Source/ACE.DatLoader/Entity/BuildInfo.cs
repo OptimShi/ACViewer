@@ -33,7 +33,16 @@ namespace ACE.DatLoader.Entity
 
             NumLeaves = reader.ReadUInt32();
 
-            Portals.Unpack(reader);
+            if(DatManager.DatVersion == DatVersionType.DM)
+            {
+                uint numPortals = reader.ReadUInt32();
+                Portals.Unpack(reader, numPortals);
+
+            }
+            else
+                Portals.Unpack(reader);
+
+
         }
     }
 }

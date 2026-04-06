@@ -32,6 +32,7 @@ namespace ACViewer
         public WpfMouse Mouse => GameView._mouse;
 
         public MouseState PrevMouseState => GameView.PrevMouseState;
+        public KeyboardState PrevKeyboardState => GameView.PrevKeyboardState;
 
         public float Speed { get; set; } = Model_Speed;
 
@@ -51,6 +52,13 @@ namespace ACViewer
 
         public static float Model_Speed { get; set; } = 0.1f;
         public static float World_Speed { get; set; } = 0.75f;
+
+        // So we can reset our camera position
+        public Vector3[] InitialCameraPosition { get; set; } = new[] {
+            new Vector3(0,0,0), // Position
+            new Vector3(0,0,0), // Direction
+            new Vector3(0,0,0), // Up
+        };
 
         public Camera(GameView game)
         {
@@ -73,6 +81,9 @@ namespace ACViewer
         public void InitParticle()
         {
             Position = new Vector3(ParticleDist, ParticleDist, 1);
+            Console.WriteLine("InitParticle - Set initial camera position");
+            InitInitialCameraState();
+
             Dir = Vector3.Normalize(new Vector3(-ParticleDist, -ParticleDist, 0));
 
             Up = Vector3.UnitZ;
@@ -98,6 +109,7 @@ namespace ACViewer
             
             Position = new Vector3(x * 192.0f, y * 192.0f, height + 50.0f);
 
+
             var lookAt = new Vector3(x * 192.0f + 96.0f, y * 192.0f + 96.0f, height);
 
             Dir = Vector3.Normalize(lookAt - Position);
@@ -107,6 +119,9 @@ namespace ACViewer
             Speed = World_Speed;
 
             CreateLookAt();
+
+            Console.WriteLine("InitLandblock - Set initial camera position");
+            InitInitialCameraState();
         }
 
         public void InitDungeon(R_Landblock landblock, Model.BoundingBox box)
@@ -133,6 +148,9 @@ namespace ACViewer
             position.Z += unit_length;
 
             Position = position;
+            InitInitialCameraState();
+            Console.WriteLine("InitDungeon - Set initial camera position");
+
 
             Dir = Vector3.Normalize(box.Center - Position);
 
@@ -151,6 +169,8 @@ namespace ACViewer
             var lby = landblock.Landblock.ID >> 16 & 0xFF;
 
             Position = new Vector3(lbx * 192.0f + origin.X, lby * 192.0f + origin.Y, origin.Z + zBump);
+            InitInitialCameraState();
+            Console.WriteLine("InitTeleport - Set initial camera position");
 
             Dir = Vector3.Normalize(Vector3.Transform(Vector3.UnitY, Matrix.CreateFromQuaternion(orientation.ToXna())));
 
@@ -225,6 +245,8 @@ namespace ACViewer
             }
 
             Position = position;
+            InitInitialCameraState();
+            Console.WriteLine("InitModel - Set initial camera position");
 
             //Console.WriteLine("Camera pos: " + Position);
 
@@ -285,6 +307,13 @@ namespace ACViewer
 
             if (!GameView.IsActive) return;
 
+            // Reset our camera
+            if (keyboardState.IsKeyDown(Keys.NumPad5) && !PrevKeyboardState.IsKeyDown(Keys.NumPad5))
+            {
+                ResetCameraState();
+                Console.WriteLine("RESET CAMERA POSITION");
+            }
+
             if (keyboardState.IsKeyDown(Keys.W))
                 Position += Dir * Speed;
             if (keyboardState.IsKeyDown(Keys.S))
@@ -295,8 +324,10 @@ namespace ACViewer
                 Position -= Vector3.Cross(Up, Dir) * Speed;
             if (keyboardState.IsKeyDown(Keys.Space))
                 Position += Up * Speed;
-            // Shift key control for downward movement
-            if (keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift))
+
+            // Shift key control for downward movement, but not if Windows key is down so I can use my Snipping tool!
+            bool windowsDown = keyboardState.IsKeyDown(Keys.LeftWindows) || keyboardState.IsKeyDown(Keys.RightWindows);
+            if (!windowsDown && (keyboardState.IsKeyDown(Keys.LeftShift) || keyboardState.IsKeyDown(Keys.RightShift)))
                 Position -= Up * Speed;
             
             // Z-level controls
@@ -448,6 +479,22 @@ namespace ACViewer
             // return outdoor location
             //return $"0x{objCellId:X8} [{x} {y} {Position.Z}] {q.W} {q.X} {q.Y} {q.Z}";
             return new Position(objCellId, new AFrame(new System.Numerics.Vector3(x, y, Position.Z), q.ToNumerics()));
+        }
+
+        public void InitInitialCameraState()
+        {
+            Console.WriteLine("Seeing initial camera state");
+            InitialCameraPosition[0] = Position;
+            InitialCameraPosition[1] = Dir;
+            InitialCameraPosition[2] = Up;
+        }
+
+        public void ResetCameraState()
+        {
+            Console.WriteLine("Resetting initial camera state");
+            Position = InitialCameraPosition[0];
+            Dir = InitialCameraPosition[1];
+            //Up = InitialCameraPosition[0];
         }
     }
 }

@@ -44,6 +44,9 @@ namespace ACE.DatLoader.Entity
 
                 InPortals.Unpack(reader, numPortals);
             }
+
+            if (DatManager.DatVersion == DatVersionType.DM)
+                reader.AlignBoundary();
         }
     }
 }

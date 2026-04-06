@@ -27,7 +27,7 @@ namespace ACE.Server.Physics.Common
         public LandblockInfo Info;
         public List<PhysicsObj> StaticObjects;
         public List<BuildingObj> Buildings;
-        public List<ushort> StabList;
+        public List<uint> StabList;
         public List<LandCell> DrawArray;
         public List<PhysicsObj> Scenery;
         public List<PhysicsObj> ServerObjects;
@@ -193,11 +193,10 @@ namespace ACE.Server.Physics.Common
             {
                 var terrain = Terrain[(int)i];
 
-                var terrainType = terrain >> 2 & 0x1F;      // TerrainTypes table size = 32 (grass, desert, volcano, etc.)
-                var sceneType = terrain >> 11;              // SceneTypes table size = 89 total, 32 which can be indexed for each terrain type
+                var sceneType = ACE.DatLoader.FileTypes.CellLandblock.GetScenery(terrain);
+                var terrainType = ACE.DatLoader.FileTypes.CellLandblock.GetType(terrain);
 
-                var sceneInfo = (int)DatManager.PortalDat.RegionDesc.TerrainInfo.TerrainTypes[terrainType].SceneTypes[sceneType];
-                var scenes = DatManager.PortalDat.RegionDesc.SceneInfo.SceneTypes[sceneInfo].Scenes;
+                var scenes = DatManager.PortalDat.RegionDesc.GetScenes(terrainType, sceneType);
                 if (scenes.Count == 0) continue;
 
                 var cellX = i / LandDefs.VertexDim;

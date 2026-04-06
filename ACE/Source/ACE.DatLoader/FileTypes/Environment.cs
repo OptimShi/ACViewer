@@ -19,6 +19,9 @@ namespace ACE.DatLoader.FileTypes
             Id = reader.ReadUInt32(); // this will match fileId
 
             Cells.Unpack(reader);
+
+            if (DatManager.DatVersion == DatVersionType.DM)
+                reader.AlignBoundary();
         }
     }
 }

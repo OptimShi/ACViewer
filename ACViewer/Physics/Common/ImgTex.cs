@@ -49,18 +49,27 @@ namespace ACE.Server.Physics.Common
         public ImgTex(SurfaceTexture surfaceTexture)
         {
             _surfaceTexture = surfaceTexture;
-
-            if (surfaceTexture.Textures == null || surfaceTexture.Textures.Count < 1)
-            {
-                Console.WriteLine($"ImgTex({surfaceTexture.Id:X8}): no textures");
-                return;
-            }
-
             ID = _surfaceTexture.Id;
-            var textureID = TextureCode = surfaceTexture.Textures[0];   // use texturecode here?
-            //Console.WriteLine($"Loading texture {textureID:X8}");
-            var renderSurface = DatManager.PortalDat.ReadFromDat<Texture>(textureID);
-            ImageData = new RenderSurface(renderSurface);
+
+            if (DatManager.DatVersion == DatVersionType.DM)
+            {
+                var renderSurface = _surfaceTexture.ConvertToTexture();
+                ImageData = new RenderSurface(renderSurface);
+            }
+            else
+            {
+
+                if (surfaceTexture.Textures == null || surfaceTexture.Textures.Count < 1)
+                {
+                    Console.WriteLine($"ImgTex({surfaceTexture.Id:X8}): no textures");
+                    return;
+                }
+
+                var textureID = TextureCode = surfaceTexture.Textures[0];   // use texturecode here?
+                                                                            //Console.WriteLine($"Loading texture {textureID:X8}");
+                var renderSurface = DatManager.PortalDat.ReadFromDat<Texture>(textureID);
+                ImageData = new RenderSurface(renderSurface);
+            }
         }
 
         public static ImgTex CreateLScapeTexture(byte[] rawData, uint i_width, uint i_height)

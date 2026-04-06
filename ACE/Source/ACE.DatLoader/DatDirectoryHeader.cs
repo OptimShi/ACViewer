@@ -5,7 +5,7 @@ namespace ACE.DatLoader
 {
     public class DatDirectoryHeader : IUnpackable
     {
-        internal const uint ObjectSize = ((sizeof(uint) * 0x3E) + sizeof(uint) + (DatFile.ObjectSize * 0x3D));
+        //internal const uint ObjectSize = ((sizeof(uint) * 0x3E) + sizeof(uint) + (DatFile.ObjectSize * 0x3D));
 
         public uint[] Branches { get; private set; }
         public uint EntryCount { get; private set; }

@@ -1,21 +1,23 @@
-﻿using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-
-using Microsoft.Win32;
-
-using ACE.DatLoader;
+﻿using ACE.DatLoader;
 using ACE.DatLoader.Entity;
 using ACE.DatLoader.FileTypes;
-
 using ACViewer.Config;
 using ACViewer.Data;
 using ACViewer.Enum;
 using ACViewer.Render;
+using Microsoft.Win32;
+using System;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Reflection.Metadata;
+using System.Text;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Interop;
+using System.Windows.Shapes;
 
 namespace ACViewer.View
 {
@@ -548,6 +550,186 @@ namespace ACViewer.View
             }
 
             return $"{fileTypeName} - 0x{did:X8}";
+        }
+
+
+        private void miCellDatReader_Click(object sender, RoutedEventArgs e)
+        {
+            var test = DatManager.CellDat.ReadFromDat<EnvCell>(0xE74E015A);
+
+            var assembly = typeof(DatDatabase).GetTypeInfo().Assembly;
+            var types = assembly.GetTypes().Where(t => t.GetCustomAttributes(typeof(DatFileTypeAttribute), false).Length > 0).ToList();
+
+            if (types.Count == 0)
+                throw new Exception("Failed to locate any types with DatFileTypeAttribute.");
+
+            foreach (var kvp in DatManager.CellDat.AllFiles)
+            {
+                if (kvp.Key == 0xFFFF0001) // // Iteration info
+                    continue;
+
+                if (kvp.Value.FileSize == 0) // DatFileType.LandBlock files can be empty
+                    continue;
+
+                var fileType = kvp.Value.GetFileType(DatDatabaseType.Cell);
+
+                if ((kvp.Key & 0xFFFF) == 0xFFFE) fileType = DatFileType.LandBlockInfo;
+                if ((kvp.Key & 0xFFFF) == 0xFFFF) fileType = DatFileType.LandBlock;
+
+                var type = types
+                    .SelectMany(m => m.GetCustomAttributes(typeof(DatFileTypeAttribute), false), (m, a) => new { m, a })
+                    .Where(t => ((DatFileTypeAttribute)t.a).FileType == fileType)
+                    .Select(t => t.m);
+
+                var first = type.FirstOrDefault();
+
+                if (first == null)
+                    throw new Exception($"Failed to Unpack fileType: {fileType}");
+
+                var obj = Activator.CreateInstance(first);
+
+                var unpackable = obj as IUnpackable;
+
+                if (unpackable == null)
+                    throw new Exception($"Class for fileType: {fileType} does not implement IUnpackable.");
+
+                //Console.WriteLine($"Reading {fileType}.{kvp.Key:X8}");
+
+                DatReader datReader = DatManager.CellDat.GetReaderForFile(kvp.Key);
+
+                using (var memoryStream = new MemoryStream(datReader.Buffer))
+                using (var reader = new BinaryReader(memoryStream))
+                {
+                    unpackable.Unpack(reader);
+
+                    if (memoryStream.Position != kvp.Value.FileSize)
+                    {
+                        string msg = $"Failed to parse all bytes for fileType: {fileType}, ID: 0x{kvp.Value.ObjectId:X8}. Bytes parsed: {memoryStream.Position} of {kvp.Value.FileSize}";
+                        Console.WriteLine(msg);
+                        MainWindow.AddStatusText(msg);
+                    }
+                }
+            }
+
+            MainWindow.AddStatusText("Done reading cell.dat");
+        }
+
+        private void miPortalDatReader_Click(object sender, RoutedEventArgs e)
+        {
+
+            string logFile = "D:\\Web Development\\beta0\\portal_log.txt";
+            using (var portal_log = new StreamWriter(logFile, append: false))
+            {
+                //var envTest = DatManager.PortalDat.ReadFromDat<ACE.DatLoader.FileTypes.Environment>(0x0D000002);
+
+                var assembly = typeof(DatDatabase).GetTypeInfo().Assembly;
+                var types = assembly.GetTypes().Where(t => t.GetCustomAttributes(typeof(DatFileTypeAttribute), false).Length > 0).ToList();
+
+                if (types.Count == 0)
+                    throw new Exception("Failed to locate any types with DatFileTypeAttribute.");
+
+
+                foreach (var kvp in DatManager.PortalDat.AllFiles)
+                {
+                    if (kvp.Key == 0xFFFF0001) // // Iteration info
+                        continue;
+
+                    if (kvp.Value.FileSize == 0) // DatFileType.LandBlock files can be empty
+                        continue;
+
+                    var fileType = kvp.Value.GetFileType(DatDatabaseType.Portal);
+
+                    if ((kvp.Key & 0xFFFF) == 0xFFFE) fileType = DatFileType.LandBlockInfo;
+                    if ((kvp.Key & 0xFFFF) == 0xFFFF) fileType = DatFileType.LandBlock;
+
+                    /*
+                    switch (fileType)
+                    {
+                        //case DatFileType.SecondaryAttributeTable:
+                        //case DatFileType.Animation:
+                        //case DatFileType.Environment:
+                        //case DatFileType.CharacterGenerator:
+                        //case DatFileType.ChatPoseTable:
+                        //case DatFileType.GraphicsObject:
+                        case DatFileType.SpellTable:
+                            //case DatFileType.ObjectHierarchy:
+                            {
+                                Console.WriteLine($"===== SKIPPING {fileType}.{kvp.Key:X8}");
+                                portal_log.WriteLine($"===== SKIPPING {fileType}.{kvp.Key:X8}");
+                                continue;
+                            }
+                            break;
+                    }
+                    if (kvp.Key == 0x0E000010 || kvp.Key == 0x0E000001)
+                    {
+                        Console.WriteLine($"===== SKIPPING {fileType}.{kvp.Key:X8}");
+                        portal_log.WriteLine($"===== SKIPPING {fileType}.{kvp.Key:X8}");
+                        continue;
+                    }
+                    */
+
+                    var type = types
+                        .SelectMany(m => m.GetCustomAttributes(typeof(DatFileTypeAttribute), false), (m, a) => new { m, a })
+                        .Where(t => ((DatFileTypeAttribute)t.a).FileType == fileType)
+                        .Select(t => t.m);
+
+                    var first = type.FirstOrDefault();
+
+                    if (first == null)
+                    {
+                        Console.WriteLine($"Reading {fileType}.{kvp.Key:X8}");
+                        portal_log.WriteLine($"Reading {fileType}.{kvp.Key:X8}");
+                        
+                        string msg = $"================= Failed to Unpack fileType: {fileType}";
+                        Console.WriteLine(msg);
+                        portal_log.WriteLine(msg);
+                        MainWindow.AddStatusText(msg);
+                        continue;
+                    }
+
+                    var obj = Activator.CreateInstance(first);
+
+                    var unpackable = obj as IUnpackable;
+
+                    if (unpackable == null)
+                        throw new Exception($"Class for fileType: {fileType} does not implement IUnpackable.");
+
+                    DatReader datReader = DatManager.PortalDat.GetReaderForFile(kvp.Key);
+
+                    using (var memoryStream = new MemoryStream(datReader.Buffer))
+                    using (var reader = new BinaryReader(memoryStream))
+                    {
+                        try
+                        {
+                            unpackable.Unpack(reader);
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Reading {fileType}.{kvp.Key:X8}");
+                            portal_log.WriteLine($"Reading {fileType}.{kvp.Key:X8}");
+
+                            string msg = " - ERROR - " + ex.Message;
+                            Console.WriteLine(msg);
+                            portal_log.WriteLine(msg);
+                            MainWindow.AddStatusText(msg);
+                        }
+
+                        if (memoryStream.Position != kvp.Value.FileSize)
+                        {
+                            Console.WriteLine($"Reading {fileType}.{kvp.Key:X8}");
+                            portal_log.WriteLine($"Reading {fileType}.{kvp.Key:X8}");
+
+                            string msg = $" - Read Error - Failed to parse all bytes for fileType: {fileType}, ID: 0x{kvp.Value.ObjectId:X8}. Bytes parsed: {memoryStream.Position} of {kvp.Value.FileSize}";
+                            Console.WriteLine(msg);
+                            portal_log.WriteLine(msg);
+                            MainWindow.AddStatusText(msg);
+                        }
+                    }
+                }
+            }
+
+            MainWindow.AddStatusText("Done reading portal.dat");
+
         }
     }
 }

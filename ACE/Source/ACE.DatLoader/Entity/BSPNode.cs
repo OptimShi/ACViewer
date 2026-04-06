@@ -84,6 +84,9 @@ namespace ACE.DatLoader.Entity
             uint numPolys = reader.ReadUInt32();
             for (uint i = 0; i < numPolys; i++)
                 InPolys.Add(reader.ReadUInt16());
+
+            if (DatManager.DatVersion == DatVersionType.DM)
+                reader.AlignBoundary();
         }
 
         public static BSPNode ReadNode(BinaryReader reader, BSPType treeType)

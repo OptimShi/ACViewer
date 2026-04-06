@@ -57,10 +57,19 @@ namespace ACE.DatLoader.Entity
 
         public void Unpack(BinaryReader reader)
         {
-            Name = reader.ReadObfuscatedString();
-            reader.AlignBoundary();
-            Desc = reader.ReadObfuscatedString();
-            reader.AlignBoundary();
+            if (DatManager.DatVersion == DatVersionType.DM && DatManager.Iteration <= 8) { 
+                Name = reader.ReadPString(2);
+                reader.AlignBoundary();
+                Desc = reader.ReadPString(2);
+                reader.AlignBoundary();
+            }
+            else
+            {
+                Name = reader.ReadObfuscatedString();
+                reader.AlignBoundary();
+                Desc = reader.ReadObfuscatedString();
+                reader.AlignBoundary();
+            }
             School = (MagicSchool)reader.ReadUInt32();
             Icon = reader.ReadUInt32();
             Category = (SpellCategory)reader.ReadUInt32();

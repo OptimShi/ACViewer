@@ -29,10 +29,11 @@ namespace ACE.DatLoader
             using (var reader = new BinaryReader(memoryStream))
                 DatDirectoryHeader.Unpack(reader);
 
-            // directory is allowed to have files + 1 subdirectories
-            if (DatDirectoryHeader.Branches[0] != 0)
+
+            // Beta 0
+            if(DatManager.DatVersion == DatVersionType.DM && DatManager.Iteration <= 8)
             {
-                for (int i = 0; i < DatDirectoryHeader.EntryCount + 1; i++)
+                for (int i = 0; i < DatDirectoryHeader.Branches.Length; i++)
                 {
                     if (DatDirectoryHeader.Branches[i] != 0
                        && DatDirectoryHeader.Branches[i] != 0xcdcdcdcd
@@ -44,6 +45,21 @@ namespace ACE.DatLoader
                         directory.Read(stream);
                         Directories.Add(directory);
                         DatManager.ReadSectors.Add(DatDirectoryHeader.Branches[i]);
+                    }
+                }
+
+            }
+            else
+            // directory is allowed to have files + 1 subdirectories
+            //if (DatDirectoryHeader.Branches[0] != 0)
+            {
+                if (DatDirectoryHeader.Branches[0] != 0)
+                {
+                    for (int i = 0; i < DatDirectoryHeader.EntryCount + 1; i++)
+                    {
+                        var directory = new DatDirectory(DatDirectoryHeader.Branches[i], blockSize);
+                        directory.Read(stream);
+                        Directories.Add(directory);
                     }
                 }
             }

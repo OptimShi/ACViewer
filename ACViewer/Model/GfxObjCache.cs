@@ -21,7 +21,7 @@ namespace ACViewer.Model
         {
             if (!Cache.TryGetValue(gfxObjID, out var gfxObj))
             {
-                //Console.WriteLine($"- Loading {gfxObjID:X8}");
+                Console.WriteLine($"GfxObjCache.cs - Loading {gfxObjID:X8}");
                 gfxObj = new GfxObj(gfxObjID);
                 Cache.Add(gfxObjID, gfxObj);
             }

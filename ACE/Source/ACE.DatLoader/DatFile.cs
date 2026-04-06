@@ -39,13 +39,14 @@ namespace ACE.DatLoader
                     ObjectId = reader.ReadUInt32();
                     FileOffset = reader.ReadUInt32();
                     FileSize = reader.ReadUInt32();
-
+                    /*
                     if (DatManager.Iteration <= 8) // Beta 0;
                     {
                         var Unk = reader.ReadUInt32();
                     }
                     var PrevFile = reader.ReadUInt32();
                     var NextFile = reader.ReadUInt32();
+                    */
                     break;
             }
 

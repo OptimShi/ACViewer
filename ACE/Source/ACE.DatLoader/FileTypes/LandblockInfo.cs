@@ -55,8 +55,14 @@ namespace ACE.DatLoader.FileTypes
 
             Buildings.Unpack(reader, numBuildings);
 
+            if (DatManager.DatVersion == DatVersionType.DM)
+                reader.AlignBoundary();
+
             if ((PackMask & 1) == 1)
                 RestrictionTables.UnpackPackedHashTable(reader);
+
+            if (DatManager.DatVersion == DatVersionType.DM)
+                reader.AlignBoundary();
         }
     }
 }

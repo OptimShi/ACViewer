@@ -24,7 +24,10 @@ namespace ACE.DatLoader.Entity
             TexVelocityX        = reader.ReadSingle();
             TexVelocityY        = reader.ReadSingle();
             DefaultGFXObjectId  = reader.ReadUInt32();
-            DefaultPESObjectId  = reader.ReadUInt32();
+
+            if(DatManager.DatVersion == DatVersionType.TOD)
+                DefaultPESObjectId  = reader.ReadUInt32();
+
             Properties          = reader.ReadUInt32();
 
             reader.AlignBoundary();

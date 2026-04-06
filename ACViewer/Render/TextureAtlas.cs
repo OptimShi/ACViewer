@@ -72,7 +72,10 @@ namespace ACViewer.Render
                     var alphaData = new byte[numColors];
                     texture.GetData(alphaData, 0, numColors);
 
-                    _Textures.SetData(0, textureIdx, null, alphaData, 0, numColors);
+                    // Does not like it when we pass this as a null, so we'll pass a full rectangle instead.
+                    Microsoft.Xna.Framework.Rectangle rect = new Microsoft.Xna.Framework.Rectangle(0, 0, texture.Width, texture.Height);
+
+                    _Textures.SetData(0, textureIdx, rect, alphaData, 0, numColors);
                 }
                 else
                 {
@@ -83,8 +86,11 @@ namespace ACViewer.Render
 
                     var mipData = texture.GetMipData(numColors);
 
+                    // Does not like it when we pass this as a null, so we'll pass a full rectangle instead.
+                    Microsoft.Xna.Framework.Rectangle rect = new Microsoft.Xna.Framework.Rectangle(0, 0, texture.Width, texture.Height);
+
                     for (var i = 0; i < numLevels; i++)
-                        _Textures.SetData(i, textureIdx - firstIdx, null, mipData[i], 0, mipData[i].Length);
+                        _Textures.SetData(i, textureIdx - firstIdx, rect, mipData[i], 0, mipData[i].Length);
                 }
             }
         }

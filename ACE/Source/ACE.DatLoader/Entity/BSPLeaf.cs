@@ -40,6 +40,9 @@ namespace ACE.DatLoader.Entity
                 for (uint i = 0; i < numPolys; i++)
                     InPolys.Add(reader.ReadUInt16());
             }
+
+            if (DatManager.DatVersion == DatVersionType.DM)
+                reader.AlignBoundary();
         }
     }
 }

@@ -1,4 +1,5 @@
 using log4net;
+using System;
 using System.Collections.Generic;
 using System.IO;
 
@@ -44,6 +45,7 @@ namespace ACE.DatLoader
                     CellDat = new CellDatDatabase(datFile, keepOpen);
                     ReadSectors.Clear();
                     count = CellDat.AllFiles.Count;
+                    Console.WriteLine($"-- Loaded {datFile} with {count} files.");
                     log.Info($"Successfully opened {datFile} file, containing {count} records, iteration {CellDat.Iteration}");
                     if (CellDat.Iteration != ITERATION_CELL)
                         log.Warn($"{datFile} iteration does not match expected end-of-retail version of {ITERATION_CELL}.");
@@ -62,9 +64,11 @@ namespace ACE.DatLoader
                     datFile = Path.Combine(datDir, "portal.dat");
 
                 PortalDat = new PortalDatDatabase(datFile, keepOpen);
+                count = PortalDat.AllFiles.Count;
+                Console.WriteLine($"-- Loaded {datFile} with {count} files.");
+                PortalDat.ReadBaseFiles();
                 ReadSectors.Clear();
 //                PortalDat.SkillTable.AddRetiredSkills();
-                count = PortalDat.AllFiles.Count;
                 log.Info($"Successfully opened {datFile} file, containing {count} records, iteration {PortalDat.Iteration}");
                 if (PortalDat.Iteration != ITERATION_PORTAL)
                     log.Warn($"{datFile} iteration does not match expected end-of-retail version of {ITERATION_PORTAL}.");
@@ -87,20 +91,24 @@ namespace ACE.DatLoader
                     log.Warn($"{datFile} iteration does not match expected end-of-retail version of {ITERATION_HIRES}.");
             }
 
-            try
+            datFile = Path.Combine(datDir, "client_local_English.dat");
+            if (File.Exists(datFile))
             {
-                datFile = Path.Combine(datDir, "client_local_English.dat");
-                LanguageDat = new LanguageDatDatabase(datFile, keepOpen);
-                ReadSectors.Clear();
-                count = LanguageDat.AllFiles.Count;
-                log.Info($"Successfully opened {datFile} file, containing {count} records, iteration {LanguageDat.Iteration}");
-                if(LanguageDat.Iteration != ITERATION_LANGUAGE)
-                    log.Warn($"{datFile} iteration does not match expected end-of-retail version of {ITERATION_LANGUAGE}.");
-            }
-            catch (FileNotFoundException ex)
-            {
-                log.Error($"An exception occured while attempting to open {datFile} file!\n\n *** Please check your 'DatFilesDirectory' setting in the config.json file. ***\n *** ACE will not run properly without this properly configured! ***\n");
-                log.Error($"Exception: {ex.Message}");
+                try
+                {
+                    datFile = Path.Combine(datDir, "client_local_English.dat");
+                    LanguageDat = new LanguageDatDatabase(datFile, keepOpen);
+                    ReadSectors.Clear();
+                    count = LanguageDat.AllFiles.Count;
+                    log.Info($"Successfully opened {datFile} file, containing {count} records, iteration {LanguageDat.Iteration}");
+                    if (LanguageDat.Iteration != ITERATION_LANGUAGE)
+                        log.Warn($"{datFile} iteration does not match expected end-of-retail version of {ITERATION_LANGUAGE}.");
+                }
+                catch (FileNotFoundException ex)
+                {
+                    log.Error($"An exception occured while attempting to open {datFile} file!\n\n *** Please check your 'DatFilesDirectory' setting in the config.json file. ***\n *** ACE will not run properly without this properly configured! ***\n");
+                    log.Error($"Exception: {ex.Message}");
+                }
             }
         }
 

@@ -74,6 +74,10 @@ namespace ACE.DatLoader.FileTypes
 
         public static ushort GetType(ushort terrain)
         {
+            // Beta 0
+            if (DatManager.DatVersion == DatVersionType.DM && DatManager.Iteration == 8)
+                return (ushort)(((terrain & 0x7F) >> 2) & 0x3F);
+
             return GetTerrain(terrain, TerrainMask_Type, TerrainShift_Type);
         }
 

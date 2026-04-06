@@ -13,6 +13,22 @@ namespace ACE.Entity.Enum
     public enum SurfacePixelFormat : uint
     {
         PFID_UNKNOWN = 0,
+
+        // 1 - 12 are all pre TOD image formats
+        INDEX4 = 1,
+        INDEX8 = 2,
+        ARGB1555 = 3,
+        ARGB4444 = 4,
+        ARGB8888 = 5,
+        RGB555 = 6,
+        RGB565 = 7,
+        RGB888 = 8,
+        MONO = 9,
+        COLOR_SEP = 10,
+        ALPHA_ONLY = 11,
+        //NUM_IMAGE_TYPE = 12,
+
+        // Post TOD Image Formats
         PFID_R8G8B8 = 20,
         PFID_A8R8G8B8 = 21,
         PFID_X8R8G8B8 = 22,

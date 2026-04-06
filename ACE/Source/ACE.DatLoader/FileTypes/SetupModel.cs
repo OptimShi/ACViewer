@@ -88,13 +88,23 @@ namespace ACE.DatLoader.FileTypes
 
             Spheres.Unpack(reader);
 
-            Height          = reader.ReadSingle();
-            Radius          = reader.ReadSingle();
+            // Not available in Beta0
+            if (DatManager.DatVersion == DatVersionType.TOD || DatManager.Iteration > 8)
+            {
+                Height = reader.ReadSingle();
+                Radius = reader.ReadSingle();
+            }
+
             StepUpHeight    = reader.ReadSingle();
             StepDownHeight  = reader.ReadSingle();
 
             SortingSphere.Unpack(reader);
-            SelectionSphere.Unpack(reader);
+
+            // Not available in Beta0
+            if (DatManager.DatVersion == DatVersionType.TOD || DatManager.Iteration > 8)
+            {
+                SelectionSphere.Unpack(reader);
+            }
 
             Lights.Unpack(reader);
 

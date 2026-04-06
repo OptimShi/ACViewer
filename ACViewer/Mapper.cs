@@ -1,13 +1,13 @@
-﻿using System;
+﻿using ACE.DatLoader;
+using ACE.DatLoader.FileTypes;
+using ACE.Entity.Enum;
+using ACViewer.Render;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-
-using ACE.DatLoader;
-using ACE.DatLoader.FileTypes;
-
-using ACViewer.Render;
 
 namespace ACViewer
 {
@@ -80,7 +80,7 @@ namespace ACViewer
                             land[startY - y, startX + x].Type = type;
                             land[startY - y, startX + x].Z = GetLandheight(newZ);
                             land[startY - y, startX + x].Used = true;
-                            uint itex = (uint)((type >> 2) & 0x3F);
+                            uint itex = CellLandblock.GetType(type);
                             if (itex < 16 || itex > 20)
                                 land[startY - y, startX + x].Blocked = false;
                             else
@@ -156,7 +156,7 @@ namespace ACViewer
                     if ((land[y, x].Type & 0x0003) != 0)
                         type = 32;
                     else
-                        type = (ushort)((land[y, x].Type & 0xFF) >> 2);
+                        type = CellLandblock.GetType(land[y, x].Type);
 
                     // Calculate lighting scalar
                     float light = (((lightVector[0] * v[0] + lightVector[1] * v[1] + lightVector[2] * v[2]) /
@@ -207,8 +207,8 @@ namespace ACViewer
 
         private List<Color> GetMapColors()
         {
-            uint RegionID = 0x13000000;
-            var Region = DatManager.PortalDat.ReadFromDat<RegionDesc>(RegionID);
+            var Region = DatManager.PortalDat.RegionDesc;
+
             Color[] landColors = new Color[Region.TerrainInfo.LandSurfaces.TexMerge.TerrainDesc.Count];
             for (var i = 0; i < Region.TerrainInfo.LandSurfaces.TexMerge.TerrainDesc.Count; i++)
             {
@@ -216,13 +216,45 @@ namespace ACViewer
                 var surfaceId = t.TerrainTex.TexGID;
                 SurfaceTexture st;
                 st = DatManager.PortalDat.ReadFromDat<SurfaceTexture>(surfaceId);
-                var textureId = st.Textures[st.Textures.Count - 1];
-                var texture = DatManager.PortalDat.ReadFromDat<Texture>(textureId);
-                landColors[i] = GetAverageColor(texture);
+                if (DatManager.DatVersion == DatVersionType.DM)
+                {
+                    // TODO - OPTIM Handle PalShift options
+                    landColors[i] = GetAverageColorSepColor(st);
+                }
+                else
+                {
+                    var textureId = st.Textures[st.Textures.Count - 1];
+                    var texture = DatManager.PortalDat.ReadFromDat<Texture>(textureId);
+                    landColors[i] = GetAverageColor(texture);
+                }
             }
             return landColors.ToList();
         }
 
+        private Color GetAverageColorSepColor(SurfaceTexture image)
+        {
+            if (image == null)
+                return Color.FromArgb(0, 255, 0); // TRANSPARENT
+
+            uint r = 0, g = 0, b = 0;
+            var pixels = image.Width * image.Height;
+            using (var stream = new MemoryStream(image.SourceData))
+            using (var reader = new BinaryReader(stream))
+            {
+                for (var i = 0; i < pixels; i++)
+                    r += reader.ReadByte();
+                for (var i = 0; i < pixels; i++)
+                    g += reader.ReadByte();
+                for (var i = 0; i < pixels; i++)
+                    b += reader.ReadByte();
+            }
+
+            var avgR = r / pixels;
+            var avgG = g / pixels;
+            var avgB = b / pixels;
+
+            return Color.FromArgb((int)avgB, (int)avgG, (int)avgR);
+        }
         private Color GetAverageColor(Texture image)
         {
             if (image == null)
@@ -258,13 +290,19 @@ namespace ACViewer
 
         private Color GetPixel(Texture texture, int x, int y)
         {
-            var offset = (y * texture.Width + x) * 4;
+            switch (texture.Format)
+            {
+                case SurfacePixelFormat.PFID_A8R8G8B8: // Post TOD
+                    var offset = (y * texture.Width + x) * 4;
 
-            var r = texture.SourceData[offset + 2];
-            var g = texture.SourceData[offset + 1];
-            var b = texture.SourceData[offset];
+                    var r = texture.SourceData[offset + 2];
+                    var g = texture.SourceData[offset + 1];
+                    var b = texture.SourceData[offset];
 
-            return Color.FromArgb(r, g, b);
+                    return Color.FromArgb(r, g, b);
+            }
+
+            return Color.Transparent;
         }
 
         /// <summary>
@@ -272,14 +310,7 @@ namespace ACViewer
         /// </summary>
         private int GetLandheight(byte height)
         {
-            if (height <= 200)
-                return height * 2;
-            else if (height <= 240)
-                return 400 + (height - 200) * 4;
-            else if (height <= 250)
-                return 560 + (height - 240) * 8;
-            else
-                return 640 + (height - 250) * 10;
+            return (int)RegionDesc.GetLandHeight(height);
         }
     }
 }

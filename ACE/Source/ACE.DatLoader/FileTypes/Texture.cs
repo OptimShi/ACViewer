@@ -8,9 +8,9 @@
 using ACE.Entity.Enum;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.IO;
 
 namespace ACE.DatLoader.FileTypes
 {
@@ -32,11 +32,23 @@ namespace ACE.DatLoader.FileTypes
         public override void Unpack(BinaryReader reader)
         {
             Id = reader.ReadUInt32();
-            Unknown = reader.ReadInt32();
-            Width = reader.ReadInt32();
-            Height = reader.ReadInt32();
-            Format = (SurfacePixelFormat)reader.ReadUInt32();
-            Length = reader.ReadInt32();
+
+            if (DatManager.DatVersion == DatVersionType.TOD)
+            {
+                Unknown = reader.ReadInt32();
+                Width = reader.ReadInt32();
+                Height = reader.ReadInt32();
+                Format = (SurfacePixelFormat)reader.ReadUInt32();
+                Length = reader.ReadInt32();
+            }
+            else
+            {
+                Width = reader.ReadInt32();
+                Height = reader.ReadInt32();
+
+                Format = SurfacePixelFormat.RGB888; // All Are this format!
+                Length = Width * Height * 3; // RGB888 is bytes per pixel, one each for R,G,B
+            }
 
             SourceData = reader.ReadBytes(Length);
 
@@ -127,6 +139,45 @@ namespace ACE.DatLoader.FileTypes
 
             switch (Format)
             {
+                case SurfacePixelFormat.COLOR_SEP: // Has all the red pixel data, then green, then blue
+                    // We're just going to stuff them all into a RGB8 format for an easier time later
+                    using (BinaryReader reader = new BinaryReader(new MemoryStream(SourceData)))
+                    {
+                        List<byte> rB = new List<byte>();
+                        List<byte> gB = new List<byte>();
+                        List<byte> bB = new List<byte>();
+
+                        var totalPixels = Height * Width;
+
+                        for (uint i = 0; i < totalPixels; i++)
+                            rB.Add(reader.ReadByte());
+                        for (uint i = 0; i < totalPixels; i++)
+                            gB.Add(reader.ReadByte());
+                        for (uint i = 0; i < totalPixels; i++)
+                            bB.Add(reader.ReadByte());
+                        for (int i = 0; i < totalPixels; i++) {
+                            byte r = rB[i];
+                            byte g = gB[i];
+                            byte b = bB[i];
+                            int color = (r << 16) | (g << 8) | b;
+                            colors.Add(color);
+                        }
+                    }
+                    break;
+                case SurfacePixelFormat.RGB888: // RGB
+                    using (BinaryReader reader = new BinaryReader(new MemoryStream(SourceData)))
+                    {
+                        for (uint i = 0; i < Height; i++)
+                            for (uint j = 0; j < Width; j++)
+                            {
+                                byte r = reader.ReadByte();
+                                byte g = reader.ReadByte();
+                                byte b = reader.ReadByte();
+                                int color = (r << 16) | (g << 8) | b;
+                                colors.Add(color);
+                            }
+                    }
+                    break;
                 case SurfacePixelFormat.PFID_R8G8B8: // RGB
                     using (BinaryReader reader = new BinaryReader(new MemoryStream(SourceData)))
                     {
@@ -171,6 +222,7 @@ namespace ACE.DatLoader.FileTypes
                                 colors.Add(reader.ReadInt16());
                     }
                     break;
+                case SurfacePixelFormat.ALPHA_ONLY:
                 case SurfacePixelFormat.PFID_A8: // Greyscale, also known as Cairo A8.
                 case SurfacePixelFormat.PFID_CUSTOM_LSCAPE_ALPHA:
                     using (BinaryReader reader = new BinaryReader(new MemoryStream(SourceData)))
@@ -249,6 +301,8 @@ namespace ACE.DatLoader.FileTypes
             Bitmap image = new Bitmap(Width, Height);
             switch (this.Format)
             {
+                case SurfacePixelFormat.COLOR_SEP:
+                case SurfacePixelFormat.RGB888:
                 case SurfacePixelFormat.PFID_R8G8B8:
                 case SurfacePixelFormat.PFID_CUSTOM_LSCAPE_R8G8B8:
                     for (int i = 0; i < Height; i++)
@@ -294,6 +348,7 @@ namespace ACE.DatLoader.FileTypes
                             image.SetPixel(j, i, Color.FromArgb(a, r, g, b));
                         }
                     break;
+                case SurfacePixelFormat.ALPHA_ONLY:
                 case SurfacePixelFormat.PFID_A8:
                 case SurfacePixelFormat.PFID_CUSTOM_LSCAPE_ALPHA:
                     for (int i = 0; i < Height; i++)
@@ -371,6 +426,58 @@ namespace ACE.DatLoader.FileTypes
             color.Add(blue); // Blue
 
             return color;
+        }
+
+        /// <summary>
+        /// Used when converting a SurfaceTexture into a texture format
+        /// </summary>
+        /// <param name="id"></param>
+        public void SetId(uint id)
+        {
+            Id = id;
+        }
+
+        /// <summary>
+        /// Will convert some pre TOD texture formats to post TOD textures formats
+        /// </summary>
+        public void ConvertTextureFormat()
+        {
+            switch (Format)
+            {
+                case SurfacePixelFormat.RGB565:
+                    //Format = SurfacePixelFormat.PFID_R5G6B5;
+                    break;
+                case SurfacePixelFormat.ARGB4444:
+                    Format = SurfacePixelFormat.PFID_A4R4G4B4;
+                    //List<ushort> colors = new List<ushort>();
+
+                    break;
+                case SurfacePixelFormat.INDEX8:
+                    List<byte> indexes = new List<byte>(); // We'll store the values here temporarily
+                    using (BinaryReader reader = new BinaryReader(new MemoryStream(SourceData)))
+                    {
+                        for (uint y = 0; y < Height; y++)
+                            for (uint x = 0; x < Width; x++)
+                                indexes.Add(reader.ReadByte());
+                    }
+
+                    // Write the colors back as 16bit values
+                    using (var stream = new MemoryStream())
+                    using (var writer = new BinaryWriter(stream))
+                    {
+                        foreach (var idx in indexes)
+                        {
+
+                            writer.Write((ushort)(idx));
+                        }
+
+                        SourceData = stream.GetBuffer();
+                    }
+
+                    Format = SurfacePixelFormat.PFID_INDEX16;
+                    break;
+
+            }
         }
     }
 }

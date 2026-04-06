@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
-
+﻿using ACE.DatLoader;
 using ACViewer.Entity;
+using SharpDX;
+using System.Collections.Generic;
 
 namespace ACViewer.FileTypes
 {
@@ -17,15 +18,28 @@ namespace ACViewer.FileTypes
         {
             var treeView = new TreeNode($"{_surfaceTexture.Id:X8}");
 
-            var unknown = new TreeNode($"Unknown: {_surfaceTexture.Unknown}");
-            var unknownByte = new TreeNode($"UnknownByte: {_surfaceTexture.UnknownByte}");
+            if (DatManager.DatVersion == DatVersionType.DM)
+            {
+                var format = new TreeNode($"Format: {_surfaceTexture.Format}");
+                var width = new TreeNode($"Width: {_surfaceTexture.Width}");
+                var height = new TreeNode($"Height: {_surfaceTexture.Height}");
 
-            var textures = new TreeNode("Textures:");
-            foreach (var textureID in _surfaceTexture.Textures)
-                textures.Items.Add(new TreeNode($"{textureID:X8}", clickable: true));
+                treeView.Items.AddRange(new List<TreeNode>() { format, width, height });
 
-            treeView.Items.AddRange(new List<TreeNode>() { unknown, unknownByte, textures });
+                if (_surfaceTexture.DefaultPaletteId != null)
+                    treeView.Items.Add(new TreeNode($"DefaultPalette: {_surfaceTexture.DefaultPaletteId:X8}", clickable: true));
+            }
+            else
+            {
+                var unknown = new TreeNode($"Unknown: {_surfaceTexture.Unknown}");
+                var unknownByte = new TreeNode($"UnknownByte: {_surfaceTexture.UnknownByte}");
 
+                var textures = new TreeNode("Textures:");
+                foreach (var textureID in _surfaceTexture.Textures)
+                    textures.Items.Add(new TreeNode($"{textureID:X8}", clickable: true));
+
+                treeView.Items.AddRange(new List<TreeNode>() { unknown, unknownByte, textures });
+            }
             return treeView;
         }
     }

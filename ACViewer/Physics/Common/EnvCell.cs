@@ -29,7 +29,7 @@ namespace ACE.Server.Physics.Common
         public List<PhysicsObj> StaticObjects;
         public List<ushort> LightArray;
         public int InCellTimestamp;
-        public List<ushort> VisibleCellIDs;
+        public List<uint> VisibleCellIDs;
         public new Dictionary<uint, EnvCell> VisibleCells;
         public EnvCellFlags Flags;
         public uint EnvironmentID;
@@ -137,7 +137,7 @@ namespace ACE.Server.Physics.Common
             }
         }
 
-        public void check_building_transit(ushort portalId, Position pos, int numSphere, List<Sphere> spheres, CellArray cellArray, SpherePath path)
+        public void check_building_transit(uint portalId, Position pos, int numSphere, List<Sphere> spheres, CellArray cellArray, SpherePath path)
         {
             //if (portalId == 0) return;
             if (portalId == ushort.MaxValue) return;
@@ -155,13 +155,13 @@ namespace ACE.Server.Physics.Common
             }
         }
 
-        public void check_building_transit(int portalId, int numParts, List<PhysicsPart> parts, CellArray cellArray)
+        public void check_building_transit(uint portalId, int numParts, List<PhysicsPart> parts, CellArray cellArray)
         {
             //if (portalId == 0) return;
-            if (portalId == ushort.MaxValue) return;
+            if (portalId == ushort.MaxValue || portalId == uint.MaxValue) return;
 
-            var portal = Portals[portalId];
-            var portalPoly = CellStructure.Portals[portalId];
+            var portal = Portals[(int)portalId];
+            var portalPoly = CellStructure.Portals[(int)portalId];
 
             foreach (var part in parts)
             {

@@ -49,6 +49,9 @@ namespace ACE.DatLoader.Entity
                 NegSurface = PosSurface;
                 NegUVIndices = PosUVIndices;
             }
+
+            if (DatManager.DatVersion == DatVersionType.DM)
+                reader.AlignBoundary();
         }
 
         public void LoadVertices(CVertexArray vertexArray)

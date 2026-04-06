@@ -48,6 +48,8 @@
                         <Image Source="../Icons/plume.png" />
                     </MenuItem.Icon>
                 </MenuItem>
+                <MenuItem x:Name="miCellDatReader" Header="_Cell Dat Read Test" Click="miCellDatReader_Click"></MenuItem>
+                <MenuItem x:Name="miPortalDatReader" Header="_Portal Dat Read Test" Click="miPortalDatReader_Click"></MenuItem>
             </MenuItem>
             <MenuItem Header="_Server">
                 <MenuItem Header="Load _Instances" Click="LoadInstances_Click" x:Name="optionLoadInstances"/>

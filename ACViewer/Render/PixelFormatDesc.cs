@@ -193,7 +193,7 @@ namespace ACViewer.Render
                         }
                         return false;
                     }
-                    if (format == SurfacePixelFormat.PFID_CUSTOM_LSCAPE_ALPHA)
+                    if (format == SurfacePixelFormat.PFID_CUSTOM_LSCAPE_ALPHA || format == SurfacePixelFormat.ALPHA_ONLY)
                     {
                         Flags = 2;
                         AlphaBitMask = 0xFF;
