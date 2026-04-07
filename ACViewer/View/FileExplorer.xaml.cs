@@ -249,7 +249,7 @@ namespace ACViewer.View
                     FileInfo.SetInfo(new Setup(setup).BuildTree());
                     GameView.ViewMode = ViewMode.Model;
                     ModelViewer.LoadModel(fileID);
-                    MotionList.OnClickSetup(fileID);
+                    // MotionList.OnClickSetup(fileID);
                     break;
                 case 0x03:
                     var anim = DatManager.PortalDat.ReadFromDat<ACE.DatLoader.FileTypes.Animation>(fileID);

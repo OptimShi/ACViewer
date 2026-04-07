@@ -70,6 +70,9 @@ namespace ACE.DatLoader.FileTypes
                 case SurfacePixelFormat.COLOR_SEP:
                     tex.Length = Width * Height * 3;
                     break;
+                case SurfacePixelFormat.RGB565:
+                    tex.Length = Width * Height * 4; // each pixel is a uint16
+                    break;
                 case SurfacePixelFormat.ARGB4444:
                     tex.Length = Width * Height * 4;
                     break;

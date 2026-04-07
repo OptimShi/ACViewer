@@ -145,7 +145,7 @@ namespace ACViewer.Render
                     case SurfacePixelFormat.PFID_R5G6B5:
                     case SurfacePixelFormat.PFID_A4R4G4B4:
                         var bitmap = texture.GetBitmap();
-                        if (texture.Format == SurfacePixelFormat.PFID_CUSTOM_RAW_JPEG || texture.Format == SurfacePixelFormat.COLOR_SEP)
+                        if (texture.Format == SurfacePixelFormat.PFID_CUSTOM_RAW_JPEG || texture.Format == SurfacePixelFormat.COLOR_SEP || texture.Format == SurfacePixelFormat.RGB565)
                             SwapRedAndBlueChannels(bitmap);
                         var _tex = GetTexture2DFromBitmap(GameView.Instance.GraphicsDevice, bitmap);
                         //if (isClipMap)

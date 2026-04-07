@@ -33,11 +33,6 @@ namespace ACE.DatLoader.FileTypes
 
         public bool SeenOutside => Flags.HasFlag(EnvCellFlags.SeenOutside);
 
-        private bool marker1;
-        private bool marker2;
-        private bool marker3;
-        private bool marker4;
-
         public override void Unpack(BinaryReader reader)
         {
             // Beta 0

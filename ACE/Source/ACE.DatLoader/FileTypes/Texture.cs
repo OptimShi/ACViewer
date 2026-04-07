@@ -240,6 +240,7 @@ namespace ACE.DatLoader.FileTypes
                                 colors.Add(reader.ReadByte());
                     }
                     break;
+                case SurfacePixelFormat.RGB565:
                 case SurfacePixelFormat.PFID_R5G6B5: // 16-bit RGB
                     using (BinaryReader reader = new BinaryReader(new MemoryStream(SourceData)))
                     {
@@ -361,6 +362,7 @@ namespace ACE.DatLoader.FileTypes
                             image.SetPixel(j, i, Color.FromArgb(r, g, b));
                         }
                     break;
+                case SurfacePixelFormat.RGB565: // 16-bit RGB
                 case SurfacePixelFormat.PFID_R5G6B5: // 16-bit RGB
                     for (int i = 0; i < Height; i++)
                         for (int j = 0; j < Width; j++)
