@@ -95,7 +95,7 @@ namespace ACE.DatLoader
         /// </summary>
         public T ReadFromDat<T>(uint fileId) where T : FileType, new()
         {
-            // Console.WriteLine($"DatDatabase.ReadFromDat({fileId:X8}");
+             // Console.WriteLine($"DatDatabase.ReadFromDat(0x{fileId:X8})");
             // Check the FileCache so we don't need to hit the FileSystem repeatedly
             if (FileCache.TryGetValue(fileId, out FileType result))
                 return (T)result;

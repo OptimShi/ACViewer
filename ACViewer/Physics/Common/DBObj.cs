@@ -64,7 +64,6 @@ namespace ACE.Server.Physics.Common
         public static EnvCell GetEnvCell(uint id)
         {
             var envCell = DatManager.CellDat.ReadFromDat<DatLoader.FileTypes.EnvCell>(id);
-
             return new EnvCell(envCell);
         }
 

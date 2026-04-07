@@ -108,7 +108,6 @@ namespace ACViewer
         public void LoadEnvCell(uint envCellID)
         {
             // TODO: this should be more like WorldViewer, with support for various StaticObjects and their PhysicsEffects in the EnvCell
-
             var envCell = new ACE.Server.Physics.Common.EnvCell(DatManager.CellDat.ReadFromDat<EnvCell>(envCellID));
             envCell.Pos = new ACE.Server.Physics.Common.Position();
             EnvCell = new R_EnvCell(envCell);

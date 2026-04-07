@@ -15,21 +15,22 @@ namespace ACE.DatLoader.Entity
 
         public void Unpack(BinaryReader reader)
         {
-            switch (DatManager.DatVersion)
+            // Beta 0
+            if(DatManager.DatVersion == DatVersionType.DM && DatManager.Iteration <= 8)
             {
-                case DatVersionType.DM:
-                    PolygonId = reader.ReadUInt16();
-                    Flags = (PortalFlags)reader.ReadUInt16();
-                    OtherCellId = reader.ReadUInt32();
-                    OtherPortalId = reader.ReadUInt32();
-                    reader.ReadUInt32(); // Unknown
-                    break;
-                case DatVersionType.TOD:
-                    Flags = (PortalFlags)reader.ReadUInt16();
-                    PolygonId = reader.ReadUInt16();
-                    OtherCellId = reader.ReadUInt16();
-                    OtherPortalId = reader.ReadUInt16();
-                    break;
+                PolygonId = reader.ReadUInt16();
+                Flags = (PortalFlags)reader.ReadUInt16();
+                OtherCellId = reader.ReadUInt32();
+                OtherPortalId = reader.ReadUInt32();
+                reader.ReadUInt32(); // Unknown
+            }
+            else
+            {
+                Flags = (PortalFlags)reader.ReadUInt16();
+                PolygonId = reader.ReadUInt16();
+                OtherCellId = reader.ReadUInt16();
+                OtherPortalId = reader.ReadUInt16();
+
             }
         }
     }

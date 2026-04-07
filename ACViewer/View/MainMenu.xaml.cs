@@ -52,6 +52,12 @@ namespace ACViewer.View
         {
             InitializeComponent();
             Instance = this;
+
+#if DEBUG
+            // Show these menu options for read debugging
+            miCellDatReader.Visibility = Visibility.Visible;
+            miPortalDatReader.Visibility = Visibility.Visible;
+#endif
         }
 
         private void OpenFile_Click(object sender, RoutedEventArgs e)
@@ -555,8 +561,8 @@ namespace ACViewer.View
 
         private void miCellDatReader_Click(object sender, RoutedEventArgs e)
         {
-            var test = DatManager.CellDat.ReadFromDat<EnvCell>(0xE74E015A);
-
+            //var test = DatManager.CellDat.ReadFromDat<EnvCell>(0x017B011C);
+            //return;
             var assembly = typeof(DatDatabase).GetTypeInfo().Assembly;
             var types = assembly.GetTypes().Where(t => t.GetCustomAttributes(typeof(DatFileTypeAttribute), false).Length > 0).ToList();
 
@@ -593,7 +599,7 @@ namespace ACViewer.View
                 if (unpackable == null)
                     throw new Exception($"Class for fileType: {fileType} does not implement IUnpackable.");
 
-                //Console.WriteLine($"Reading {fileType}.{kvp.Key:X8}");
+                Console.WriteLine($"Reading {fileType}.{kvp.Key:X8}");
 
                 DatReader datReader = DatManager.CellDat.GetReaderForFile(kvp.Key);
 
@@ -617,7 +623,7 @@ namespace ACViewer.View
         private void miPortalDatReader_Click(object sender, RoutedEventArgs e)
         {
 
-            string logFile = "D:\\Web Development\\beta0\\portal_log.txt";
+            string logFile = "D:\\Web Development\\acdm\\portal_log.txt";
             using (var portal_log = new StreamWriter(logFile, append: false))
             {
                 //var envTest = DatManager.PortalDat.ReadFromDat<ACE.DatLoader.FileTypes.Environment>(0x0D000002);

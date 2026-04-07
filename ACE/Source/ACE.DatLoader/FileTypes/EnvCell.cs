@@ -33,18 +33,31 @@ namespace ACE.DatLoader.FileTypes
 
         public bool SeenOutside => Flags.HasFlag(EnvCellFlags.SeenOutside);
 
+        private bool marker1;
+        private bool marker2;
+        private bool marker3;
+        private bool marker4;
+
         public override void Unpack(BinaryReader reader)
         {
-            if (DatManager.DatVersion == DatVersionType.DM)
+            // Beta 0
+            if (DatManager.DatVersion == DatVersionType.DM && DatManager.Iteration <= 8)
             {
-                UnpackDM(reader);
+                UnpackBetaZero(reader);
             }
             else
             {
-                Id = reader.ReadUInt32();
-
-                Flags = (EnvCellFlags)reader.ReadUInt32();
-                reader.BaseStream.Position += 4; // Skip ahead 4 bytes, because this is the CellId. Again. Twice.
+                if (DatManager.DatVersion == DatVersionType.TOD)
+                {
+                    Id = reader.ReadUInt32();
+                    Flags = (EnvCellFlags)reader.ReadUInt32();
+                    reader.BaseStream.Position += 4; // Skip ahead 4 bytes, because this is the CellId. Again. Twice.
+                }
+                else if (DatManager.DatVersion == DatVersionType.DM)
+                {
+                    Flags = (EnvCellFlags)reader.ReadUInt32();
+                    Id = reader.ReadUInt32(); // Id is not the first uint, but it is here
+                }
 
                 byte numSurfaces = reader.ReadByte();
                 byte numPortals = reader.ReadByte();    // Note that "portal" in this context does not refer to the swirly pink/purple thing, its basically connecting cells
@@ -53,6 +66,10 @@ namespace ACE.DatLoader.FileTypes
                 // Read what surfaces are used in this cell
                 for (uint i = 0; i < numSurfaces; i++)
                     Surfaces.Add(0x08000000u | reader.ReadUInt16()); // these are stored in the dat as short values, so we'll make them a full dword
+
+                // DM, but post Beta 0
+                if (DatManager.DatVersion == DatVersionType.DM && DatManager.Iteration > 8)
+                    reader.AlignBoundary();
 
                 EnvironmentId = (0x0D000000u | reader.ReadUInt16());
 
@@ -65,6 +82,9 @@ namespace ACE.DatLoader.FileTypes
                 for (uint i = 0; i < numStabs; i++)
                     VisibleCells.Add(reader.ReadUInt16());
 
+                if (DatManager.DatVersion == DatVersionType.DM && reader.BaseStream.Position < reader.BaseStream.Length)
+                    reader.AlignBoundary();
+
                 if ((Flags & EnvCellFlags.HasStaticObjs) != 0)
                     StaticObjects.Unpack(reader);
 
@@ -72,7 +92,7 @@ namespace ACE.DatLoader.FileTypes
                     RestrictionObj = reader.ReadUInt32();
             }
         }
-        public void UnpackDM(BinaryReader reader)
+        public void UnpackBetaZero(BinaryReader reader)
         {
             Id = reader.ReadUInt32();
 

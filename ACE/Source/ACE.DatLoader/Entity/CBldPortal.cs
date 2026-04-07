@@ -23,7 +23,8 @@ namespace ACE.DatLoader.Entity
 
         public void Unpack(BinaryReader reader)
         {
-            if (DatManager.DatVersion == DatVersionType.DM)
+            // Beta 0
+            if (DatManager.DatVersion == DatVersionType.DM && DatManager.Iteration <= 8)
             {
                 Flags = (PortalFlags)reader.ReadUInt32();
                 OtherCellId = reader.ReadUInt32();

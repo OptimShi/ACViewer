@@ -44,25 +44,32 @@ namespace ACE.DatLoader.FileTypes
 
         public override void Unpack(BinaryReader reader)
         {
-            Id = reader.ReadUInt32();
+            try
+            {
+                Id = reader.ReadUInt32();
 
-            NumCells = reader.ReadUInt32();
+                NumCells = reader.ReadUInt32();
 
-            Objects.Unpack(reader);
+                Objects.Unpack(reader);
 
-            ushort numBuildings = reader.ReadUInt16();
-            PackMask = reader.ReadUInt16();
+                ushort numBuildings = reader.ReadUInt16();
+                PackMask = reader.ReadUInt16();
 
-            Buildings.Unpack(reader, numBuildings);
+                Buildings.Unpack(reader, numBuildings);
 
-            if (DatManager.DatVersion == DatVersionType.DM)
-                reader.AlignBoundary();
+                if (DatManager.DatVersion == DatVersionType.DM)
+                    reader.AlignBoundary();
 
-            if ((PackMask & 1) == 1)
-                RestrictionTables.UnpackPackedHashTable(reader);
+                if ((PackMask & 1) == 1)
+                    RestrictionTables.UnpackPackedHashTable(reader);
 
-            if (DatManager.DatVersion == DatVersionType.DM)
-                reader.AlignBoundary();
+                if (DatManager.DatVersion == DatVersionType.DM)
+                    reader.AlignBoundary();
+            }
+            catch (System.Exception e)
+            {
+                var oops = true;
+            }
         }
     }
 }

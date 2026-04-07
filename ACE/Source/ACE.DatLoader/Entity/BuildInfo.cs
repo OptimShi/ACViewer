@@ -27,22 +27,20 @@ namespace ACE.DatLoader.Entity
 
         public void Unpack(BinaryReader reader)
         {
-            ModelId = reader.ReadUInt32();
+                ModelId = reader.ReadUInt32();
 
-            Frame.Unpack(reader);
+                Frame.Unpack(reader);
 
-            NumLeaves = reader.ReadUInt32();
+                NumLeaves = reader.ReadUInt32();
 
-            if(DatManager.DatVersion == DatVersionType.DM)
-            {
-                uint numPortals = reader.ReadUInt32();
-                Portals.Unpack(reader, numPortals);
+                if (DatManager.DatVersion == DatVersionType.DM)
+                {
+                    uint numPortals = reader.ReadUInt32();
+                    Portals.Unpack(reader, numPortals);
 
-            }
-            else
-                Portals.Unpack(reader);
-
-
+                }
+                else
+                    Portals.Unpack(reader);
         }
     }
 }
